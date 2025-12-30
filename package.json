@@ -1,0 +1,24 @@
+{
+  "name": "yt-prices",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "start": "npx tsx --env-file=.env index.ts",
+    "lint": "eslint . --fix"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "undici": "^6.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "@typescript-eslint/eslint-plugin": "^7.17.0",
+    "@typescript-eslint/parser": "^7.17.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "prettier": "^3.6.2"
+  }
+}
