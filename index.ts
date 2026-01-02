@@ -101,8 +101,8 @@ async function getCachedAuthAndSecurityTokens(): Promise<{ authToken: string; se
       const securityToken = await getSecurityToken(cached.authToken);
       await writeTokenCache(cached.authToken, securityToken);
       return { authToken: cached.authToken, securityToken };
-    } catch {
-      // fall through to a fresh registration
+    } catch (e) {
+      console.log(e);
     }
   }
 
@@ -115,8 +115,6 @@ async function getCachedAuthAndSecurityTokens(): Promise<{ authToken: string; se
 async function registerAnonymous(): Promise<string> {
   const url = `${API}/registrations/clientApps/${CLIENT_APP}/users/anonymous`;
   const data = await postJson<any>(url, { clientApp: { name: CLIENT_APP, browser: BROWSER } });
-
-  // Some builds return { value: "..." }, others might return a raw string.
   if (typeof data === 'string') return data;
   if (data?.value) return String(data.value);
   throw new Error(`Unexpected anonymous registration response: ${JSON.stringify(data)}`);
@@ -135,8 +133,6 @@ async function getSecurityToken(authToken: string): Promise<Token> {
 
 async function getCountries(securityTokenValue: string): Promise<CountryEntry[]> {
   const url = `${STATS_API}/entrypoints/countries`;
-
-  // This is the header you were missing.
   const root = await getJson<any>(url, {
     'X-Client-App': CLIENT_APP,
     Accept: 'application/json',
@@ -188,8 +184,6 @@ function parsePremiumPrices(html: string): string[] {
     const plans = parsePremiumPlansFromInitialData(data);
     if (plans.length) return formatPlanPrices(plans);
   }
-
-  // Fallback: extract plausible price strings like "$13.99".
   const priceRegex = /\$\s*\d+(?:[.,]\d{2})?/g;
   const matches = html.match(priceRegex) ?? [];
   return Array.from(new Set(matches.map((m) => m.trim())));
@@ -218,8 +212,6 @@ function extractJsonVar(html: string, name: string): string | null {
   idx += 1;
   while (idx < html.length && /\s/.test(html[idx])) idx += 1;
   if (html[idx] !== '{') return null;
-
-  // Walk the JSON text with a brace counter that ignores strings.
   let depth = 0;
   let inString = false;
   let escape = false;
@@ -408,8 +400,6 @@ async function fetchPremiumPricesViaProxies(securityTokenValue: string, proxies:
 
     for (let i = 0; i < 3; i++) {
       const proxyToken = await getProxyToken(securityTokenValue, p.signature);
-
-      // Proxy auth: username = proxyToken.value, password = "1"
       const proxyUrl = new URL(`http://${p.host}:${p.port}`);
       proxyUrl.username = proxyToken.value;
       proxyUrl.password = '1';
@@ -418,7 +408,6 @@ async function fetchPremiumPricesViaProxies(securityTokenValue: string, proxies:
       const res = await fetch('https://www.youtube.com/premium', {
         dispatcher,
         headers: {
-          // Basic headers so YouTube treats this like a normal browser request.
           'accept-language': 'en-US,en;q=0.9',
           'user-agent':
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
@@ -459,8 +448,6 @@ export async function printCountryPricesReport(): Promise<void> {
     }
   }
 }
-
-// Tiny runnable example:
 printCountryPricesReport().catch((e) => {
   console.error(e);
   process.exitCode = 1;
